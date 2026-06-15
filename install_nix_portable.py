@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+d#!/usr/bin/env python3
 # nixp installer v0.3
 # A no-root helper for nix-portable.
 
@@ -33,7 +33,7 @@ LATEST_RELEASE_LOG = '''Latest release log (v0.3)
 Added:
   - --unstable / -u support for nrun, ninstall, nshell, and nadd.
   - --help-br for Brazilian Portuguese help.
-  - nactivate cli for adding Nix profile commands to the host shell PATH.
+  - nactivate cli for adding/removing Nix profile commands in the host shell PATH.
   - nver --log and nixp --log for showing the latest release log.
 
 Changed:
@@ -751,6 +751,9 @@ What it does:
   nactivate cli adds Nix profile bin/share paths to your shell startup files.
   This lets the host terminal find commands installed through ninstall / nixp profile install.
 
+If nactivate cli is already enabled:
+  Running nactivate cli again will ask if you want to disable it.
+
 Important:
   A normal command cannot directly change the environment of the already-running parent shell.
   For the current terminal session, run:
@@ -776,6 +779,9 @@ O que ele faz:
   nactivate cli adiciona os caminhos bin/share do perfil Nix nos arquivos de inicialização do shell.
   Isso faz o terminal host reconhecer comandos instalados com ninstall / nixp profile install.
 
+Se o nactivate cli já estiver ativo:
+  Rodar nactivate cli novamente vai perguntar se você quer desativar.
+
 Importante:
   Um comando normal não consegue alterar diretamente o ambiente do shell pai que já está aberto.
   Para ativar na sessão atual, rode:
@@ -788,6 +794,63 @@ print_exports() {
 export PATH="$HOME/.nix-profile/bin:$HOME/.local/state/nix/profiles/profile/bin:$PATH"
 export XDG_DATA_DIRS="$HOME/.nix-profile/share:$HOME/.local/state/nix/profiles/profile/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
 EOF
+}
+
+is_cli_active() {
+  block_start="# >>> nixp cli activation >>>"
+  shell_files=("$HOME/.bashrc" "$HOME/.profile")
+
+  if [ -f "$HOME/.zshrc" ]; then
+    shell_files+=("$HOME/.zshrc")
+  fi
+
+  for shell_file in "${shell_files[@]}"; do
+    if [ -f "$shell_file" ] && grep -qF "$block_start" "$shell_file"; then
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+disable_cli() {
+  block_start="# >>> nixp cli activation >>>"
+  block_end="# <<< nixp cli activation <<<"
+  shell_files=("$HOME/.bashrc" "$HOME/.profile")
+
+  if [ -f "$HOME/.zshrc" ]; then
+    shell_files+=("$HOME/.zshrc")
+  fi
+
+  removed_any=0
+
+  for shell_file in "${shell_files[@]}"; do
+    if [ -f "$shell_file" ] && grep -qF "$block_start" "$shell_file"; then
+      temp_file="$(mktemp)"
+
+      awk -v start="$block_start" -v end="$block_end" '
+        $0 == start { skip = 1; next }
+        $0 == end { skip = 0; next }
+        skip != 1 { print }
+      ' "$shell_file" > "$temp_file"
+
+      mv "$temp_file" "$shell_file"
+      removed_any=1
+
+      echo "Disabled in:"
+      echo "  $shell_file"
+    fi
+  done
+
+  if [ "$removed_any" = "0" ]; then
+    echo "nactivate cli was not enabled."
+  else
+    echo
+    echo "nactivate cli was disabled."
+    echo
+    echo "Open a new terminal for the change to fully apply."
+    echo "For the current terminal, you can manually remove the Nix profile paths from PATH, or just close this terminal."
+  fi
 }
 
 activate_cli() {
@@ -805,6 +868,22 @@ EOF
 
   if [ -f "$HOME/.zshrc" ]; then
     shell_files+=("$HOME/.zshrc")
+  fi
+
+  if is_cli_active; then
+    printf "nactivate cli is already enabled. Disable it? [y/N] "
+    read -r answer
+
+    case "$answer" in
+      y|Y|yes|YES|Yes)
+        disable_cli
+        ;;
+      *)
+        echo "Keeping nactivate cli enabled."
+        ;;
+    esac
+
+    exit 0
   fi
 
   for shell_file in "${shell_files[@]}"; do
