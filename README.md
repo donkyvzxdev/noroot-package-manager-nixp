@@ -1,9 +1,9 @@
-# Nixp
+# nixp
 
 **Version:** `0.3`
 
-[![Changelog](https://img.shields.io/badge/Changelog-View%20updates-blue?style=for-the-badge)](https://github.com/donkyvzxdev/noroot-package-manager-nixp/blob/main/CHANGELOG.md)
 
+[![Changelog](https://img.shields.io/badge/Changelog-View%20updates-blue?style=for-the-badge)](https://github.com/donkyvzxdev/noroot-package-manager-nixp/blob/main/CHANGELOG.md)
 **nixp** is a small helper that makes [nix-portable](https://github.com/DavHau/nix-portable) easier to install and use without `sudo` or root access.
 
 It is useful for WSL, shared machines, restricted Linux environments, or any system where you do not want to install Nix globally in `/nix`.
@@ -48,6 +48,7 @@ The installer:
 | `nadd` | Creates a menu entry for a Nix package or executable |
 | `napp` | Adds a local executable/AppImage to your menu |
 | `nexp` | Opens nixp folders in the file manager |
+| `nactivate` | Activates Nix profile commands in the host shell |
 | `nupdate` | Updates nixp and/or Nix profile apps |
 | `nver` | Shows the nixp version and latest release log |
 | `nhelp` | Shows help |
@@ -197,7 +198,21 @@ Check the real Nix version used by nix-portable:
 nixp --nix-version
 ```
 
-For the full update history, open the changelog button at the top of this README or read `CHANGELOG.md`.
+## Host shell activation
+
+To make the host terminal recognize commands installed through `ninstall` / `nixp profile install`, run:
+
+```bash
+nactivate cli
+```
+
+For the current terminal session, run:
+
+```bash
+eval "$(nactivate cli --print)"
+```
+
+This is needed because a normal command cannot directly change the environment of the parent shell that is already running.
 
 ## Useful folders
 
