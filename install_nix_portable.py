@@ -28,31 +28,24 @@ DEFAULT_NIXPKGS = "nixpkgs"
 UNSTABLE_NIXPKGS = "github:NixOS/nixpkgs/nixpkgs-unstable"
 
 
-LATEST_RELEASE_LOG = """Latest release log (v0.3)
+LATEST_RELEASE_LOG = '''Latest release log (v0.3)
 
 Added:
   - --unstable / -u support for nrun, ninstall, nshell, and nadd.
   - --help-br for Brazilian Portuguese help.
-  - Better --help output for helper commands.
-  - nver for checking the nixp version.
-  - nixp --version for showing the nixp helper version.
-  - nixp --nix-version for showing the real Nix version.
-  - nexp for opening nixp folders in the file manager.
-  - nadd for creating .desktop menu entries for Nix packages or local executables.
-  - nupdate for updating nixp and/or apps installed in the Nix profile.
+  - nactivate cli for adding Nix profile commands to the host shell PATH.
   - nver --log and nixp --log for showing the latest release log.
 
 Changed:
   - Brazilian Portuguese help flag changed from --br to --help-br.
   - Project version updated from 0.2 to 0.3.
   - Installer text is English-first.
-  - README and help messages were improved.
 
 Notes:
   - Stable and unstable packages can both be used.
   - Installing the same app from stable and unstable into the same profile may cause command conflicts.
   - Apps added from local files with napp or nadd are copied files and cannot be auto-updated by nixp.
-"""
+'''
 
 
 def info(message: str) -> None:
@@ -74,10 +67,8 @@ def fail(message: str) -> None:
 
 def machine_architecture() -> str:
     architecture = platform.machine().strip()
-
     if not architecture:
         fail("Could not detect machine architecture.")
-
     return architecture
 
 
@@ -100,10 +91,8 @@ def download_nix_portable() -> None:
             with temporary_file.open("wb") as file_handle:
                 while True:
                     chunk = response.read(1024 * 1024)
-
                     if not chunk:
                         break
-
                     file_handle.write(chunk)
 
             temporary_file.replace(NIX_PORTABLE_BIN)
@@ -112,9 +101,7 @@ def download_nix_portable() -> None:
         fail(f"Could not download nix-portable: {error}")
 
     current_mode = NIX_PORTABLE_BIN.stat().st_mode
-    NIX_PORTABLE_BIN.chmod(
-        current_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
-    )
+    NIX_PORTABLE_BIN.chmod(current_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
     ok("nix-portable was downloaded and marked as executable.")
 
@@ -161,16 +148,6 @@ Usage:
   nixp --log
   nixp --help
   nixp --help-br
-
-Examples:
-  nixp run nixpkgs#htop
-  nixp profile list
-  nixp store gc
-
-Version:
-  nixp --version      show nixp helper version
-  nixp --nix-version  show the real Nix version used by nix-portable
-  nixp --log          show nixp version and latest release log
 EOF
 }
 
@@ -185,16 +162,6 @@ Uso:
   nixp --log
   nixp --help
   nixp --help-br
-
-Exemplos:
-  nixp run nixpkgs#htop
-  nixp profile list
-  nixp store gc
-
-Versão:
-  nixp --version      mostra a versão do helper nixp
-  nixp --nix-version  mostra a versão real do Nix usado pelo nix-portable
-  nixp --log          mostra a versão do nixp e o log mais recente
 EOF
 }
 
@@ -249,16 +216,7 @@ Usage:
 
 Examples:
   nrun htop
-  nrun fastfetch
   nrun --unstable firefox
-  nrun nixpkgs#firefox
-
-What it does:
-  Stable/default:
-    nixp run nixpkgs#<package>
-
-  Unstable:
-    nixp run github:NixOS/nixpkgs/nixpkgs-unstable#<package>
 EOF
 }
 
@@ -268,22 +226,8 @@ nrun - executa um pacote Nix sem instalar permanentemente
 
 Uso:
   nrun [--unstable] <pacote>
-  nrun [--unstable] <referência-flake-ou-pacote>
   nrun --help
   nrun --help-br
-
-Exemplos:
-  nrun htop
-  nrun fastfetch
-  nrun --unstable firefox
-  nrun nixpkgs#firefox
-
-O que ele faz:
-  Padrão/estável:
-    nixp run nixpkgs#<pacote>
-
-  Unstable:
-    nixp run github:NixOS/nixpkgs/nixpkgs-unstable#<pacote>
 EOF
 }
 
@@ -342,17 +286,8 @@ Usage:
   ninstall --help-br
 
 Examples:
-  ninstall git
-  ninstall nodejs python3 neovim
-  ninstall --unstable firefox
+  ninstall git nodejs python3
   ninstall --unstable neovide vesktop
-
-What it does:
-  Stable/default:
-    nixp profile install nixpkgs#<package>
-
-  Unstable:
-    nixp profile install github:NixOS/nixpkgs/nixpkgs-unstable#<package>
 EOF
 }
 
@@ -364,19 +299,6 @@ Uso:
   ninstall [--unstable] <pacote> [outros pacotes...]
   ninstall --help
   ninstall --help-br
-
-Exemplos:
-  ninstall git
-  ninstall nodejs python3 neovim
-  ninstall --unstable firefox
-  ninstall --unstable neovide vesktop
-
-O que ele faz:
-  Padrão/estável:
-    nixp profile install nixpkgs#<pacote>
-
-  Unstable:
-    nixp profile install github:NixOS/nixpkgs/nixpkgs-unstable#<pacote>
 EOF
 }
 
@@ -439,15 +361,7 @@ Usage:
 
 Examples:
   nshell git nodejs python3
-  nshell rustc cargo
   nshell --unstable git nodejs python3
-
-What it does:
-  Stable/default:
-    nixp shell nixpkgs#<package>
-
-  Unstable:
-    nixp shell github:NixOS/nixpkgs/nixpkgs-unstable#<package>
 EOF
 }
 
@@ -459,18 +373,6 @@ Uso:
   nshell [--unstable] <pacote> [outros pacotes...]
   nshell --help
   nshell --help-br
-
-Exemplos:
-  nshell git nodejs python3
-  nshell rustc cargo
-  nshell --unstable git nodejs python3
-
-O que ele faz:
-  Padrão/estável:
-    nixp shell nixpkgs#<pacote>
-
-  Unstable:
-    nixp shell github:NixOS/nixpkgs/nixpkgs-unstable#<pacote>
 EOF
 }
 
@@ -530,16 +432,6 @@ Usage:
   napp <executable-path> [app-name] [icon-path-or-icon-name] [categories]
   napp --help
   napp --help-br
-
-Examples:
-  napp ~/Downloads/MyApp.AppImage "My App"
-  napp ~/Downloads/myapp "My App" ~/Pictures/myapp.png
-  napp ~/.local/apps/myapp/myapp "My App" ~/.local/apps/myapp/icon.png "Utility;"
-
-What it does:
-  - copies the executable to ~/.local/apps/<app-id>
-  - makes it executable
-  - creates a .desktop file in ~/.local/share/applications
 EOF
 }
 
@@ -551,16 +443,6 @@ Uso:
   napp <caminho-do-executável> [nome-do-app] [caminho-do-ícone-ou-nome-do-ícone] [categorias]
   napp --help
   napp --help-br
-
-Exemplos:
-  napp ~/Downloads/MyApp.AppImage "My App"
-  napp ~/Downloads/myapp "My App" ~/Pictures/myapp.png
-  napp ~/.local/apps/myapp/myapp "My App" ~/.local/apps/myapp/icon.png "Utility;"
-
-O que ele faz:
-  - copia o executável para ~/.local/apps/<id-do-app>
-  - torna o arquivo executável
-  - cria um arquivo .desktop em ~/.local/share/applications
 EOF
 }
 
@@ -640,8 +522,6 @@ echo "  $target_executable"
 echo
 echo "Desktop entry created at:"
 echo "  $desktop_file"
-echo
-echo "If it does not appear immediately, log out and log back in, or restart your app menu."
 '''
 
     nadd = r'''#!/usr/bin/env bash
@@ -662,14 +542,7 @@ Usage:
 Examples:
   nadd firefox "Firefox"
   nadd --unstable firefox "Firefox Unstable"
-  nadd vesktop "Vesktop" discord "Network;InstantMessaging;"
-  nadd neovide "Neovide" neovide "Development;TextEditor;"
   nadd ~/Downloads/MyApp.AppImage "My App"
-
-What it does:
-  - for Nix packages, creates a .desktop entry that runs the app through nrun
-  - with --unstable, the menu entry runs the app through nrun --unstable
-  - for local executables/AppImages, copies the file to ~/.local/apps and creates a .desktop entry
 EOF
 }
 
@@ -681,18 +554,6 @@ Uso:
   nadd [--unstable] <pacote-ou-executável> [nome-do-app] [caminho-do-ícone-ou-nome-do-ícone] [categorias]
   nadd --help
   nadd --help-br
-
-Exemplos:
-  nadd firefox "Firefox"
-  nadd --unstable firefox "Firefox Unstable"
-  nadd vesktop "Vesktop" discord "Network;InstantMessaging;"
-  nadd neovide "Neovide" neovide "Development;TextEditor;"
-  nadd ~/Downloads/MyApp.AppImage "My App"
-
-O que ele faz:
-  - para pacotes Nix, cria um .desktop que executa o app pelo nrun
-  - com --unstable, o atalho executa o app pelo nrun --unstable
-  - para executáveis/AppImages locais, copia o arquivo para ~/.local/apps e cria o .desktop
 EOF
 }
 
@@ -777,8 +638,6 @@ echo "  $desktop_file"
 echo
 echo "It will run:"
 echo "  $exec_line"
-echo
-echo "If it does not appear immediately, log out and log back in, or restart your app menu."
 '''
 
     nexp = r'''#!/usr/bin/env bash
@@ -798,11 +657,6 @@ Usage:
   nexp desktop
   nexp --help
   nexp --help-br
-
-Options:
-  nexp          opens ~/.local/nix-portable
-  nexp app      opens ~/.local/apps
-  nexp desktop  opens ~/.local/share/applications
 EOF
 }
 
@@ -816,11 +670,6 @@ Uso:
   nexp desktop
   nexp --help
   nexp --help-br
-
-Opções:
-  nexp          abre ~/.local/nix-portable
-  nexp app      abre ~/.local/apps
-  nexp desktop  abre ~/.local/share/applications
 EOF
 }
 
@@ -843,6 +692,7 @@ open_directory() {
 
   if command -v explorer.exe >/dev/null 2>&1; then
     windows_path="$(wslpath -w "$directory_path" 2>/dev/null || true)"
+
     if [ -n "$windows_path" ]; then
       explorer.exe "$windows_path" >/dev/null 2>&1 &
       exit 0
@@ -880,6 +730,138 @@ case "${1:-nix}" in
 esac
 '''
 
+    nactivate = r'''#!/usr/bin/env bash
+set -e
+
+show_help_en() {
+  cat <<'EOF'
+nactivate - activate nixp integrations in the host shell
+
+Usage:
+  nactivate cli
+  nactivate cli --print
+  nactivate --help
+  nactivate --help-br
+
+Examples:
+  nactivate cli
+  eval "$(nactivate cli --print)"
+
+What it does:
+  nactivate cli adds Nix profile bin/share paths to your shell startup files.
+  This lets the host terminal find commands installed through ninstall / nixp profile install.
+
+Important:
+  A normal command cannot directly change the environment of the already-running parent shell.
+  For the current terminal session, run:
+    eval "$(nactivate cli --print)"
+EOF
+}
+
+show_help_br() {
+  cat <<'EOF'
+nactivate - ativa integrações do nixp no shell host
+
+Uso:
+  nactivate cli
+  nactivate cli --print
+  nactivate --help
+  nactivate --help-br
+
+Exemplos:
+  nactivate cli
+  eval "$(nactivate cli --print)"
+
+O que ele faz:
+  nactivate cli adiciona os caminhos bin/share do perfil Nix nos arquivos de inicialização do shell.
+  Isso faz o terminal host reconhecer comandos instalados com ninstall / nixp profile install.
+
+Importante:
+  Um comando normal não consegue alterar diretamente o ambiente do shell pai que já está aberto.
+  Para ativar na sessão atual, rode:
+    eval "$(nactivate cli --print)"
+EOF
+}
+
+print_exports() {
+  cat <<'EOF'
+export PATH="$HOME/.nix-profile/bin:$HOME/.local/state/nix/profiles/profile/bin:$PATH"
+export XDG_DATA_DIRS="$HOME/.nix-profile/share:$HOME/.local/state/nix/profiles/profile/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+EOF
+}
+
+activate_cli() {
+  block_start="# >>> nixp cli activation >>>"
+
+  block="$(cat <<'EOF'
+# >>> nixp cli activation >>>
+export PATH="$HOME/.nix-profile/bin:$HOME/.local/state/nix/profiles/profile/bin:$PATH"
+export XDG_DATA_DIRS="$HOME/.nix-profile/share:$HOME/.local/state/nix/profiles/profile/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+# <<< nixp cli activation <<<
+EOF
+)"
+
+  shell_files=("$HOME/.bashrc" "$HOME/.profile")
+
+  if [ -f "$HOME/.zshrc" ]; then
+    shell_files+=("$HOME/.zshrc")
+  fi
+
+  for shell_file in "${shell_files[@]}"; do
+    touch "$shell_file"
+
+    if grep -qF "$block_start" "$shell_file"; then
+      echo "Already configured:"
+      echo "  $shell_file"
+    else
+      {
+        echo
+        echo "$block"
+      } >> "$shell_file"
+
+      echo "Configured:"
+      echo "  $shell_file"
+    fi
+  done
+
+  echo
+  echo "Host shell CLI activation was installed."
+  echo
+  echo "For future terminals, just open a new terminal."
+  echo "For the current terminal session, run:"
+  echo '  eval "$(nactivate cli --print)"'
+}
+
+case "${1:-}" in
+  --help|-h|help)
+    show_help_en
+    ;;
+  --help-br)
+    show_help_br
+    ;;
+  cli)
+    case "${2:-}" in
+      --print)
+        print_exports
+        ;;
+      "")
+        activate_cli
+        ;;
+      *)
+        echo "Unknown option for nactivate cli: $2"
+        echo
+        show_help_en
+        exit 1
+        ;;
+    esac
+    ;;
+  *)
+    show_help_en
+    exit 1
+    ;;
+esac
+'''
+
     nupdate = r'''#!/usr/bin/env bash
 set -e
 
@@ -895,14 +877,6 @@ Usage:
   nupdate --apps
   nupdate --help
   nupdate --help-br
-
-Options:
-  nupdate         update nixp and Nix profile apps
-  nupdate --self  update only nixp helper files
-  nupdate --apps  update only packages installed through ninstall / nixp profile install
-
-Note:
-  Apps added from local files with napp/nadd are copied files and cannot be auto-updated by nixp.
 EOF
 }
 
@@ -916,14 +890,6 @@ Uso:
   nupdate --apps
   nupdate --help
   nupdate --help-br
-
-Opções:
-  nupdate         atualiza o nixp e os apps do perfil Nix
-  nupdate --self  atualiza apenas os arquivos do helper nixp
-  nupdate --apps  atualiza apenas pacotes instalados com ninstall / nixp profile install
-
-Observação:
-  Apps adicionados de arquivos locais com napp/nadd são arquivos copiados e não podem ser atualizados automaticamente pelo nixp.
 EOF
 }
 
@@ -989,14 +955,6 @@ Usage:
   nver --log
   nver --help
   nver --help-br
-
-Examples:
-  nver
-  nver --log
-
-What it does:
-  nver shows the nixp helper version.
-  nver --log shows the version and the latest release log.
 EOF
 }
 
@@ -1009,14 +967,6 @@ Uso:
   nver --log
   nver --help
   nver --help-br
-
-Exemplos:
-  nver
-  nver --log
-
-O que ele faz:
-  nver mostra a versão do helper nixp.
-  nver --log mostra a versão e o log mais recente.
 EOF
 }
 
@@ -1053,66 +1003,29 @@ nixp help
 version: @NIXP_VERSION@
 
 Commands:
-  nixp      run Nix through nix-portable
-  nrun      run a package without installing it
-  ninstall  install packages in your user profile
-  nshell    open a temporary shell with packages
-  nadd      create a menu entry for a Nix package or executable
-  napp      add a local executable/AppImage to your menu
-  nexp      open nixp folders in the file manager
-  nupdate   update nixp and/or Nix profile apps
-  nver      show nixp version and latest release log
-  nhelp     show this help message
+  nixp       run Nix through nix-portable
+  nrun       run a package without installing it
+  ninstall   install packages in your user profile
+  nshell     open a temporary shell with packages
+  nadd       create a menu entry for a Nix package or executable
+  napp       add a local executable/AppImage to your menu
+  nexp       open nixp folders in the file manager
+  nactivate  activate nixp integrations in the host shell
+  nupdate    update nixp and/or Nix profile apps
+  nver       show nixp version and latest release log
+  nhelp      show this help message
 
 Examples:
   nrun htop
-  nrun --unstable firefox
   ninstall git nodejs python3
-  ninstall --unstable neovide vesktop
-  nshell --unstable git nodejs python3
-  nadd firefox "Firefox"
-  nadd --unstable firefox "Firefox Unstable"
-  nadd ~/Downloads/MyApp.AppImage "My App"
-  nexp
-  nexp app
-  nexp desktop
-  nupdate
-  nupdate --self
-  nupdate --apps
-  nver
+  nactivate cli
+  eval "$(nactivate cli --print)"
   nver --log
 
-Version log:
-  Use nver --log or nixp --log to show the current version and the latest release log.
-
-Unstable packages:
-  Use --unstable or -u with nrun, ninstall, nshell, and nadd.
-  It uses:
-    github:NixOS/nixpkgs/nixpkgs-unstable#<package>
-
-Language:
-  Use --help-br with any nixp helper command to see help in Brazilian Portuguese.
-  Examples:
-    nhelp --help-br
-    nrun --help-br
-    nadd --help-br
-
-Runtime:
-  Default runtime:
-    NP_RUNTIME=@DEFAULT_RUNTIME@
-
-  If you get namespace, mount, or permission errors:
-    NP_RUNTIME=proot nrun htop
-
-Useful folders:
-  nix-portable:
-    @INSTALL_DIR@
-
-  local apps:
-    @LOCAL_APPS_DIR@
-
-  menu entries:
-    @DESKTOP_ENTRIES_DIR@
+Host shell activation:
+  Use nactivate cli to make your host terminal find commands installed by ninstall.
+  For the current terminal session, run:
+    eval "$(nactivate cli --print)"
 EOF
 }
 
@@ -1122,66 +1035,22 @@ ajuda do nixp
 versão: @NIXP_VERSION@
 
 Comandos:
-  nixp      executa o Nix pelo nix-portable
-  nrun      executa um pacote sem instalar
-  ninstall  instala pacotes no perfil do usuário
-  nshell    abre um shell temporário com pacotes
-  nadd      cria atalho de menu para pacote Nix ou executável
-  napp      adiciona executável/AppImage local ao menu
-  nexp      abre pastas do nixp no explorador de arquivos
-  nupdate   atualiza o nixp e/ou apps do perfil Nix
-  nver      mostra a versão do nixp e o log mais recente
-  nhelp     mostra esta ajuda
+  nixp       executa o Nix pelo nix-portable
+  nrun       executa um pacote sem instalar
+  ninstall   instala pacotes no perfil do usuário
+  nshell     abre um shell temporário com pacotes
+  nadd       cria atalho de menu para pacote Nix ou executável
+  napp       adiciona executável/AppImage local ao menu
+  nexp       abre pastas do nixp no explorador de arquivos
+  nactivate  ativa integrações do nixp no shell host
+  nupdate    atualiza o nixp e/ou apps do perfil Nix
+  nver       mostra a versão do nixp e o log mais recente
+  nhelp      mostra esta ajuda
 
-Exemplos:
-  nrun htop
-  nrun --unstable firefox
-  ninstall git nodejs python3
-  ninstall --unstable neovide vesktop
-  nshell --unstable git nodejs python3
-  nadd firefox "Firefox"
-  nadd --unstable firefox "Firefox Unstable"
-  nadd ~/Downloads/MyApp.AppImage "My App"
-  nexp
-  nexp app
-  nexp desktop
-  nupdate
-  nupdate --self
-  nupdate --apps
-  nver
-  nver --log
-
-Log da versão:
-  Use nver --log ou nixp --log para mostrar a versão atual e o log mais recente.
-
-Pacotes unstable:
-  Use --unstable ou -u com nrun, ninstall, nshell e nadd.
-  Ele usa:
-    github:NixOS/nixpkgs/nixpkgs-unstable#<pacote>
-
-Idioma:
-  Use --help-br com qualquer comando helper do nixp para ver ajuda em português brasileiro.
-  Exemplos:
-    nhelp --help-br
-    nrun --help-br
-    nadd --help-br
-
-Runtime:
-  Runtime padrão:
-    NP_RUNTIME=@DEFAULT_RUNTIME@
-
-  Se aparecer erro de namespace, mount ou permissão:
-    NP_RUNTIME=proot nrun htop
-
-Pastas úteis:
-  nix-portable:
-    @INSTALL_DIR@
-
-  apps locais:
-    @LOCAL_APPS_DIR@
-
-  atalhos de menu:
-    @DESKTOP_ENTRIES_DIR@
+Ativação no shell host:
+  Use nactivate cli para fazer o terminal host encontrar comandos instalados com ninstall.
+  Para a sessão atual do terminal, rode:
+    eval "$(nactivate cli --print)"
 EOF
 }
 
@@ -1209,6 +1078,7 @@ esac
         "napp": napp,
         "nadd": nadd,
         "nexp": nexp,
+        "nactivate": nactivate,
         "nupdate": nupdate,
         "nver": nver,
         "nhelp": nhelp,
@@ -1238,7 +1108,7 @@ def ensure_local_bin_in_shell_path() -> None:
             continue
 
         with config_file.open("a", encoding="utf-8") as file_handle:
-            file_handle.write(f"\n{marker_line}\n{path_line}\n")
+            file_handle.write(f"\\n{marker_line}\\n{path_line}\\n")
 
         ok(f"Added ~/.local/bin to PATH in {config_file}")
 
@@ -1297,22 +1167,17 @@ def main() -> None:
     print("Then run:")
     print("  nhelp")
     print()
-    print("For Brazilian Portuguese help:")
-    print("  nhelp --help-br")
+    print("To let the host terminal find commands installed through ninstall:")
+    print("  nactivate cli")
+    print()
+    print("For the current terminal session:")
+    print('  eval "$(nactivate cli --print)"')
     print()
     print("Examples:")
     print("  nrun htop")
-    print("  nrun --unstable firefox")
     print("  ninstall git")
     print("  ninstall --unstable neovide vesktop")
-    print("  nshell --unstable nodejs python3")
     print('  nadd firefox "Firefox"')
-    print('  nadd --unstable firefox "Firefox Unstable"')
-    print('  nadd ~/Downloads/MyApp.AppImage "My App"')
-    print("  nexp")
-    print("  nexp app")
-    print("  nexp desktop")
-    print("  nupdate")
     print("  nver --log")
     print()
     print("If you get namespace or mount errors, try:")
