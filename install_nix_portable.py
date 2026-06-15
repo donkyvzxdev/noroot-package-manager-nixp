@@ -30,6 +30,7 @@ LATEST_RELEASE_LOG = '''Latest release log (v0.3)
 
 Added:
   - --unstable / -u support for nrun, ninstall, nshell, and nadd.
+  - --unfree support for nrun, ninstall, nshell, and nadd.
   - --help-br for Brazilian Portuguese help.
   - nactivate cli for adding/removing Nix profile commands in the host shell PATH.
   - nver --log and nixp --log for showing the latest release log.
@@ -207,14 +208,20 @@ show_help_en() {
 nrun - run a Nix package without installing it permanently
 
 Usage:
-  nrun [--unstable] <package>
-  nrun [--unstable] <flake-or-package-reference>
+  nrun [--unstable] [--unfree] <package>
+  nrun [--unstable] [--unfree] <flake-or-package-reference>
   nrun --help
   nrun --help-br
 
 Examples:
   nrun htop
   nrun --unstable firefox
+  nrun --unfree steam
+  nrun --unstable --unfree steam
+
+Flags:
+  --unstable, -u  use nixpkgs unstable
+  --unfree        allow unfree/proprietary packages for this command
 EOF
 }
 
@@ -223,28 +230,48 @@ show_help_br() {
 nrun - executa um pacote Nix sem instalar permanentemente
 
 Uso:
-  nrun [--unstable] <pacote>
+  nrun [--unstable] [--unfree] <pacote>
   nrun --help
   nrun --help-br
+
+Exemplos:
+  nrun htop
+  nrun --unstable firefox
+  nrun --unfree steam
+  nrun --unstable --unfree steam
+
+Flags:
+  --unstable, -u  usa o nixpkgs unstable
+  --unfree        permite pacotes proprietários/unfree neste comando
 EOF
 }
 
 use_unstable=0
+allow_unfree=0
 
-case "${1:-}" in
-  --help|-h|help)
-    show_help_en
-    exit 0
-    ;;
-  --help-br)
-    show_help_br
-    exit 0
-    ;;
-  --unstable|-u)
-    use_unstable=1
-    shift
-    ;;
-esac
+while [ $# -gt 0 ]; do
+  case "${1:-}" in
+    --help|-h|help)
+      show_help_en
+      exit 0
+      ;;
+    --help-br)
+      show_help_br
+      exit 0
+      ;;
+    --unstable|-u)
+      use_unstable=1
+      shift
+      ;;
+    --unfree)
+      allow_unfree=1
+      shift
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 
 if [ -z "${1:-}" ]; then
   show_help_en
@@ -256,16 +283,23 @@ shift
 
 case "$package_name" in
   *#*|github:*|gitlab:*|path:*)
-    exec nixp run "$package_name" "$@"
+    package_reference="$package_name"
     ;;
   *)
     if [ "$use_unstable" = "1" ]; then
-      exec nixp run "$unstable_nixpkgs#$package_name" "$@"
+      package_reference="$unstable_nixpkgs#$package_name"
     else
-      exec nixp run "$default_nixpkgs#$package_name" "$@"
+      package_reference="$default_nixpkgs#$package_name"
     fi
     ;;
 esac
+
+if [ "$allow_unfree" = "1" ]; then
+  export NIXPKGS_ALLOW_UNFREE=1
+  exec nixp run --impure "$package_reference" "$@"
+else
+  exec nixp run "$package_reference" "$@"
+fi
 '''
 
     ninstall = r'''#!/usr/bin/env bash
@@ -279,13 +313,19 @@ show_help_en() {
 ninstall - install Nix packages into your user profile
 
 Usage:
-  ninstall [--unstable] <package> [other packages...]
+  ninstall [--unstable] [--unfree] <package> [other packages...]
   ninstall --help
   ninstall --help-br
 
 Examples:
   ninstall git nodejs python3
   ninstall --unstable neovide vesktop
+  ninstall --unfree steam
+  ninstall --unstable --unfree steam
+
+Flags:
+  --unstable, -u  use nixpkgs unstable
+  --unfree        allow unfree/proprietary packages for this command
 EOF
 }
 
@@ -294,28 +334,48 @@ show_help_br() {
 ninstall - instala pacotes Nix no perfil do usuário
 
 Uso:
-  ninstall [--unstable] <pacote> [outros pacotes...]
+  ninstall [--unstable] [--unfree] <pacote> [outros pacotes...]
   ninstall --help
   ninstall --help-br
+
+Exemplos:
+  ninstall git nodejs python3
+  ninstall --unstable neovide vesktop
+  ninstall --unfree steam
+  ninstall --unstable --unfree steam
+
+Flags:
+  --unstable, -u  usa o nixpkgs unstable
+  --unfree        permite pacotes proprietários/unfree neste comando
 EOF
 }
 
 use_unstable=0
+allow_unfree=0
 
-case "${1:-}" in
-  --help|-h|help)
-    show_help_en
-    exit 0
-    ;;
-  --help-br)
-    show_help_br
-    exit 0
-    ;;
-  --unstable|-u)
-    use_unstable=1
-    shift
-    ;;
-esac
+while [ $# -gt 0 ]; do
+  case "${1:-}" in
+    --help|-h|help)
+      show_help_en
+      exit 0
+      ;;
+    --help-br)
+      show_help_br
+      exit 0
+      ;;
+    --unstable|-u)
+      use_unstable=1
+      shift
+      ;;
+    --unfree)
+      allow_unfree=1
+      shift
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 
 if [ -z "${1:-}" ]; then
   show_help_en
@@ -339,7 +399,12 @@ for package_name in "$@"; do
   esac
 done
 
-exec nixp profile install "${package_references[@]}"
+if [ "$allow_unfree" = "1" ]; then
+  export NIXPKGS_ALLOW_UNFREE=1
+  exec nixp profile install --impure "${package_references[@]}"
+else
+  exec nixp profile install "${package_references[@]}"
+fi
 '''
 
     nshell = r'''#!/usr/bin/env bash
@@ -353,13 +418,19 @@ show_help_en() {
 nshell - open a temporary shell with Nix packages available
 
 Usage:
-  nshell [--unstable] <package> [other packages...]
+  nshell [--unstable] [--unfree] <package> [other packages...]
   nshell --help
   nshell --help-br
 
 Examples:
   nshell git nodejs python3
   nshell --unstable git nodejs python3
+  nshell --unfree steam-run
+  nshell --unstable --unfree steam-run
+
+Flags:
+  --unstable, -u  use nixpkgs unstable
+  --unfree        allow unfree/proprietary packages for this command
 EOF
 }
 
@@ -368,28 +439,48 @@ show_help_br() {
 nshell - abre um shell temporário com pacotes Nix disponíveis
 
 Uso:
-  nshell [--unstable] <pacote> [outros pacotes...]
+  nshell [--unstable] [--unfree] <pacote> [outros pacotes...]
   nshell --help
   nshell --help-br
+
+Exemplos:
+  nshell git nodejs python3
+  nshell --unstable git nodejs python3
+  nshell --unfree steam-run
+  nshell --unstable --unfree steam-run
+
+Flags:
+  --unstable, -u  usa o nixpkgs unstable
+  --unfree        permite pacotes proprietários/unfree neste comando
 EOF
 }
 
 use_unstable=0
+allow_unfree=0
 
-case "${1:-}" in
-  --help|-h|help)
-    show_help_en
-    exit 0
-    ;;
-  --help-br)
-    show_help_br
-    exit 0
-    ;;
-  --unstable|-u)
-    use_unstable=1
-    shift
-    ;;
-esac
+while [ $# -gt 0 ]; do
+  case "${1:-}" in
+    --help|-h|help)
+      show_help_en
+      exit 0
+      ;;
+    --help-br)
+      show_help_br
+      exit 0
+      ;;
+    --unstable|-u)
+      use_unstable=1
+      shift
+      ;;
+    --unfree)
+      allow_unfree=1
+      shift
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 
 if [ -z "${1:-}" ]; then
   show_help_en
@@ -413,7 +504,12 @@ for package_name in "$@"; do
   esac
 done
 
-exec nixp shell "${package_references[@]}"
+if [ "$allow_unfree" = "1" ]; then
+  export NIXPKGS_ALLOW_UNFREE=1
+  exec nixp shell --impure "${package_references[@]}"
+else
+  exec nixp shell "${package_references[@]}"
+fi
 '''
 
     napp = r'''#!/usr/bin/env bash
@@ -533,14 +629,20 @@ show_help_en() {
 nadd - create an app menu entry for a Nix package or local executable
 
 Usage:
-  nadd [--unstable] <package-or-executable> [app-name] [icon-path-or-icon-name] [categories]
+  nadd [--unstable] [--unfree] <package-or-executable> [app-name] [icon-path-or-icon-name] [categories]
   nadd --help
   nadd --help-br
 
 Examples:
   nadd firefox "Firefox"
   nadd --unstable firefox "Firefox Unstable"
+  nadd --unfree steam "Steam"
+  nadd --unstable --unfree steam "Steam Unstable"
   nadd ~/Downloads/MyApp.AppImage "My App"
+
+Flags:
+  --unstable, -u  use nixpkgs unstable
+  --unfree        allow unfree/proprietary packages when launching this menu entry
 EOF
 }
 
@@ -549,28 +651,49 @@ show_help_br() {
 nadd - cria um atalho de menu para pacote Nix ou executável local
 
 Uso:
-  nadd [--unstable] <pacote-ou-executável> [nome-do-app] [caminho-do-ícone-ou-nome-do-ícone] [categorias]
+  nadd [--unstable] [--unfree] <pacote-ou-executável> [nome-do-app] [caminho-do-ícone-ou-nome-do-ícone] [categorias]
   nadd --help
   nadd --help-br
+
+Exemplos:
+  nadd firefox "Firefox"
+  nadd --unstable firefox "Firefox Unstable"
+  nadd --unfree steam "Steam"
+  nadd --unstable --unfree steam "Steam Unstable"
+  nadd ~/Downloads/MyApp.AppImage "My App"
+
+Flags:
+  --unstable, -u  usa o nixpkgs unstable
+  --unfree        permite pacotes proprietários/unfree ao abrir esse atalho
 EOF
 }
 
 use_unstable=0
+allow_unfree=0
 
-case "${1:-}" in
-  --help|-h|help)
-    show_help_en
-    exit 0
-    ;;
-  --help-br)
-    show_help_br
-    exit 0
-    ;;
-  --unstable|-u)
-    use_unstable=1
-    shift
-    ;;
-esac
+while [ $# -gt 0 ]; do
+  case "${1:-}" in
+    --help|-h|help)
+      show_help_en
+      exit 0
+      ;;
+    --help-br)
+      show_help_br
+      exit 0
+      ;;
+    --unstable|-u)
+      use_unstable=1
+      shift
+      ;;
+    --unfree)
+      allow_unfree=1
+      shift
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 
 if [ -z "${1:-}" ]; then
   show_help_en
@@ -611,11 +734,17 @@ else
   icon_line="Icon=$package_name"
 fi
 
+exec_line="nrun"
+
 if [ "$use_unstable" = "1" ]; then
-  exec_line="nrun --unstable $package_name"
-else
-  exec_line="nrun $package_name"
+  exec_line="$exec_line --unstable"
 fi
+
+if [ "$allow_unfree" = "1" ]; then
+  exec_line="$exec_line --unfree"
+fi
+
+exec_line="$exec_line $package_name"
 
 cat > "$desktop_file" <<EOF
 [Desktop Entry]
@@ -1094,6 +1223,7 @@ Commands:
 
 Examples:
   nrun htop
+  nrun --unfree steam
   ninstall git nodejs python3
   nactivate cli
   eval "$(nactivate cli --print)"
