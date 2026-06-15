@@ -1,4 +1,4 @@
-d#!/usr/bin/env python3
+#!/usr/bin/env python3
 # nixp installer v0.3
 # A no-root helper for nix-portable.
 
