@@ -8,6 +8,9 @@ This version focused on improving package selection, bilingual help, and command
 
 ### Added
 
+- Added `nactivate cli` to make the host terminal recognize commands installed through the Nix profile.
+- Added `nactivate cli --print` for activating the current terminal session with `eval`.
+
 - Added `--unstable` / `-u` support for:
   - `nrun`
   - `ninstall`
@@ -22,8 +25,6 @@ This version focused on improving package selection, bilingual help, and command
 - Added `--help-br` for Brazilian Portuguese help in helper commands.
 - Added better `--help` output for helper commands.
 - Added README documentation for stable and unstable package usage.
-- Added `nver --log` to show the nixp version and latest release log.
-- Added `nixp --log` to show the nixp version and latest release log.
 - Added explanation that stable and unstable packages can coexist, but the same app may conflict in the user profile.
 
 ### Changed
