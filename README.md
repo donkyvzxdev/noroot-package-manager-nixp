@@ -1,24 +1,12 @@
+# Nixp
 
-## Nixp
+**Version:** `0.3`
 
-**Version:** `0.2`
+[![Changelog](https://img.shields.io/badge/Changelog-View%20updates-blue?style=for-the-badge)](https://github.com/donkyvzxdev/noroot-package-manager-nixp/blob/main/CHANGELOG.md)
 
 **nixp** is a small helper that makes [nix-portable](https://github.com/DavHau/nix-portable) easier to install and use without `sudo` or root access.
 
 It is useful for WSL, shared machines, restricted Linux environments, or any system where you do not want to install Nix globally in `/nix`.
-
-## What it does
-
-The installer:
-
-- downloads `nix-portable`
-- saves it in `~/.local/nix-portable`
-- creates simple commands in `~/.local/bin`
-- adds `~/.local/bin` to your `PATH` if needed
-- adds helpers for app menu entries and file explorer shortcuts
-- adds a helper for updating nixp and installed Nix profile apps
-
-Everything is installed inside your user directory.
 
 ## Install
 
@@ -26,13 +14,28 @@ Everything is installed inside your user directory.
 curl -fsSL "https://raw.githubusercontent.com/donkyvzxdev/noroot-package-manager-nixp/main/install_nix_portable.py" | python3 && exec "$SHELL" -l
 ```
 
-This runs the installer and reloads your shell automatically.
-
-Then check the help menu:
+Then run:
 
 ```bash
 nhelp
 ```
+
+For Brazilian Portuguese help:
+
+```bash
+nhelp --help-br
+```
+
+## What it does
+
+The installer:
+
+- downloads `nix-portable`
+- saves it in `~/.local/nix-portable`
+- creates helper commands in `~/.local/bin`
+- adds `~/.local/bin` to your `PATH` if needed
+- keeps everything inside your user directory
+- does not require `sudo` or root
 
 ## Commands
 
@@ -42,12 +45,61 @@ nhelp
 | `nrun` | Runs a package without installing it |
 | `ninstall` | Installs packages in your user profile |
 | `nshell` | Opens a temporary shell with packages |
-| `napp` | Adds a local executable/AppImage to your app menu |
-| `nadd` | Creates a `.desktop` menu entry for a Nix package or local executable |
+| `nadd` | Creates a menu entry for a Nix package or executable |
+| `napp` | Adds a local executable/AppImage to your menu |
 | `nexp` | Opens nixp folders in the file manager |
-| `nupdate` | Updates nixp and/or installed Nix profile apps |
-| `nver` | Shows the nixp version |
-| `nhelp` | Shows help and examples |
+| `nupdate` | Updates nixp and/or Nix profile apps |
+| `nver` | Shows the nixp version and latest release log |
+| `nhelp` | Shows help |
+
+Every helper command supports:
+
+```bash
+--help
+```
+
+Brazilian Portuguese help is available with:
+
+```bash
+--help-br
+```
+
+Examples:
+
+```bash
+nrun --help
+nrun --help-br
+nadd --help
+nadd --help-br
+```
+
+## Unstable packages
+
+Some commands support `--unstable` or `-u`.
+
+This uses:
+
+```bash
+github:NixOS/nixpkgs/nixpkgs-unstable#<package>
+```
+
+Supported commands:
+
+```bash
+nrun --unstable <package>
+ninstall --unstable <package>
+nshell --unstable <package>
+nadd --unstable <package>
+```
+
+Examples:
+
+```bash
+nrun --unstable firefox
+ninstall --unstable neovide vesktop
+nshell --unstable nodejs python3
+nadd --unstable firefox "Firefox Unstable"
+```
 
 ## Examples
 
@@ -69,19 +121,19 @@ Open a temporary shell:
 nshell git nodejs python3
 ```
 
-Add a Nix package to your app menu:
+Create a menu entry for a Nix package:
 
 ```bash
 nadd firefox "Firefox"
 ```
 
-Add a Nix package with an icon/category:
+Create a menu entry with icon/category:
 
 ```bash
 nadd vesktop "Vesktop" discord "Network;InstantMessaging;"
 ```
 
-Add a local executable or AppImage to your app menu:
+Add a local executable or AppImage to your menu:
 
 ```bash
 nadd ~/Downloads/MyApp.AppImage "My App"
@@ -107,106 +159,65 @@ Update only nixp:
 nupdate --self
 ```
 
-Update only apps installed through `ninstall` / `nixp profile install`:
+Update only apps installed with `ninstall` / `nixp profile install`:
 
 ```bash
 nupdate --apps
 ```
 
-Check versions:
+## Version log
+
+Show only the nixp version:
+
+```bash
+nver
+```
+
+or:
 
 ```bash
 nixp --version
-nver
+```
+
+Show the nixp version and the latest release log:
+
+```bash
+nver --log
+```
+
+or:
+
+```bash
+nixp --log
+```
+
+Check the real Nix version used by nix-portable:
+
+```bash
 nixp --nix-version
 ```
 
-Use Nix directly:
+For the full update history, open the changelog button at the top of this README or read `CHANGELOG.md`.
+
+## Useful folders
+
+nix-portable:
 
 ```bash
-nixp profile list
-nixp store gc
+~/.local/nix-portable
 ```
 
-## App menu helpers
-
-### `nadd`
-
-`nadd` creates a `.desktop` menu entry automatically.
-
-For Nix packages, it creates a launcher that runs the package with `nrun`:
+Local apps added by `napp` or local-file `nadd`:
 
 ```bash
-nadd firefox "Firefox"
+~/.local/apps
 ```
 
-For local executables/AppImages, it copies the file to `~/.local/apps` and creates the menu entry:
-
-```bash
-nadd ~/Downloads/MyApp.AppImage "My App"
-```
-
-### `napp`
-
-`napp` is focused only on local executables/AppImages:
-
-```bash
-napp ~/Downloads/MyApp.AppImage "My App"
-```
-
-Both commands create menu entries in:
+Menu entries:
 
 ```bash
 ~/.local/share/applications
 ```
-
-If the app does not appear immediately, log out and log back in, or restart your app menu.
-
-## File explorer helper
-
-`nexp` opens useful nixp folders.
-
-Open the nix-portable folder:
-
-```bash
-nexp
-```
-
-Open local apps added by `napp`/`nadd`:
-
-```bash
-nexp app
-```
-
-Open app menu `.desktop` entries:
-
-```bash
-nexp desktop
-```
-
-## Updating
-
-`nupdate` has three modes:
-
-```bash
-nupdate
-```
-
-Updates nixp itself and upgrades apps installed in your Nix profile.
-
-```bash
-nupdate --self
-```
-
-Updates only nixp by downloading and running the latest installer from this repository.
-
-```bash
-nupdate --apps
-```
-
-Updates only packages installed through the Nix profile, usually with `ninstall`.
-
-Manual apps added with `napp` or `nadd` from local executable files are copied executables/AppImages, so nixp cannot automatically update them.
 
 ## Runtime
 
@@ -256,6 +267,10 @@ export PATH="$HOME/.local/bin:$PATH"
 nixp is only a helper around nix-portable. It does not replace Nix or nix-portable.
 
 Some graphical apps or Wayland compositors may not work correctly in WSL or restricted environments.
+
+Stable and unstable packages can both be used, but installing the same app from both channels may cause command conflicts in the user profile.
+
+Apps added from local executable files with `napp` or `nadd` are copied files and cannot be automatically updated by nixp.
 
 ## Credits
 
