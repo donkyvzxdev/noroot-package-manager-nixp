@@ -1,5 +1,5 @@
 
-## nixp
+## Nixp
 
 **Version:** `0.2`
 
