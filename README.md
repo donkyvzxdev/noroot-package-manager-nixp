@@ -1,10 +1,11 @@
-# nixp
+# Nixp
 
 **Version:** `0.3`
 
 
 [![Changelog](https://img.shields.io/badge/Changelog-View%20updates-blue?style=for-the-badge)](https://github.com/donkyvzxdev/noroot-package-manager-nixp/blob/main/CHANGELOG.md)
-**nixp** is a small helper that makes [nix-portable](https://github.com/DavHau/nix-portable) easier to install and use without `sudo` or root access.
+
+**Nixp** is a small helper that makes [nix-portable](https://github.com/DavHau/nix-portable) easier to install and use without `sudo` or root access.
 
 It is useful for WSL, shared machines, restricted Linux environments, or any system where you do not want to install Nix globally in `/nix`.
 
