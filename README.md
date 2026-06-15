@@ -1,4 +1,6 @@
 
+## nixp
+
 **Version:** `0.2`
 
 **nixp** is a small helper that makes [nix-portable](https://github.com/DavHau/nix-portable) easier to install and use without `sudo` or root access.
